@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Dompet Digital Online</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f3f6fb;--card:#fff;--text:#172033;--muted:#718096;--primary:#1769ff;--primary2:#00a8ff;--danger:#e53935;--line:#e7ebf2;--shadow:0 12px 35px rgba(31,55,90,.10)}
+body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text)}
+button,input{font:inherit}
+button{border:0;cursor:pointer}
+.app{max-width:430px;min-height:100vh;margin:auto;background:var(--bg);position:relative}
+header{padding:20px 18px 25px;background:linear-gradient(135deg,#1167ff,#00a9ff);color:white;border-radius:0 0 28px 28px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:21px;font-weight:800}.online{font-size:11px;background:#ffffff22;border:1px solid #ffffff44;padding:6px 9px;border-radius:99px}
+.balance-card{margin-top:20px}.small{font-size:13px;opacity:.85}.balance{font-size:34px;font-weight:850;letter-spacing:-1px;margin:4px 0}
+.eye{background:#ffffff1f;color:white;padding:5px 9px;border-radius:10px;margin-left:5px}
+.content{padding:15px 15px 95px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:13px;box-shadow:var(--shadow)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#f7f9fd;border-radius:15px;padding:12px}.stat b{display:block;margin-top:4px}.muted{color:var(--muted);font-size:12px}
+h2,h3{margin:0 0 12px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{padding:13px 14px;border-radius:14px;font-weight:750}.primary{background:linear-gradient(135deg,#1769ff,#009ff5);color:white}.soft{background:#edf4ff;color:#1769ff}.danger{background:#fff0f0;color:#d92929}
+input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:13px;outline:none;background:#fff;color:var(--text);margin:6px 0}
+input:focus{border-color:#1769ff;box-shadow:0 0 0 3px #1769ff18}
+.amounts{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 10px}.amounts button{background:#eef5ff;color:#1769ff;border-radius:10px;padding:8px 10px;font-size:12px}
+.tx{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}.tx:last-child{border-bottom:0}
+.icon{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:#eef5ff}.txmain{flex:1}.txmain b{display:block}.txmain span{font-size:11px;color:var(--muted)}
+.plus{color:#159447;font-weight:800}.minus{color:#d73737;font-weight:800}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:430px;width:100%;background:#ffffffee;backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);padding:9px 10px 12px;z-index:20}
+nav button{background:none;color:var(--muted);font-size:11px}.navicon{font-size:20px;display:block}.active{color:#1769ff!important;font-weight:800}
+.overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0c5df5,#00a9ff);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}.auth{width:min(390px,100%);background:#fff;border-radius:25px;padding:22px;box-shadow:0 25px 70px #001b4d55}.auth h1{margin:0 0 5px}.auth .sub{color:var(--muted);font-size:13px;margin-bottom:15px}.tabs{display:flex;background:#f0f3f8;padding:4px;border-radius:12px;margin-bottom:12px}.tabs button{flex:1;padding:9px;border-radius:9px;background:none;color:var(--muted)}.tabs .sel{background:#fff;color:#1769ff;font-weight:800;box-shadow:0 2px 8px #0000000c}
+.hidden{display:none!important}.notice{background:#fff7dc;border:1px solid #ffe7a2;color:#745400;border-radius:13px;padding:11px;font-size:11px;line-height:1.45;margin:10px 0}.toast{position:fixed;top:15px;left:50%;transform:translateX(-50%) translateY(-20px);opacity:0;z-index:100;background:#172033;color:#fff;padding:11px 15px;border-radius:12px;font-size:12px;transition:.25s;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.loader{text-align:center;padding:25px;color:var(--muted);font-size:13px}.profileLine{padding:10px 0;border-bottom:1px solid var(--line)}.profileLine:last-child{border:0}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<div id="authOverlay" class="overlay">
+  <div class="auth">
+    <h1>💳 Dompet Digital</h1>
+    <div class="sub">Demo online — akun dan saldo tersimpan di database bersama.</div>
+    <div class="tabs"><button id="loginTab" class="sel" onclick="switchAuth('login')">Masuk</button><button id="regTab" onclick="switchAuth('reg')">Buat Akun</button></div>
+
+    <div id="loginBox">
+      <input id="loginPhone" inputmode="tel" placeholder="Nomor HP (contoh 08123456789)">
+      <input id="loginPass" type="password" placeholder="Password">
+      <button class="btn primary" style="width:100%;margin-top:6px" onclick="login()">Masuk</button>
+    </div>
+
+    <div id="regBox" class="hidden">
+      <input id="regName" placeholder="Nama">
+      <input id="regPhone" inputmode="tel" placeholder="Nomor HP">
+      <input id="regPass" type="password" placeholder="Password minimal 6 karakter">
+      <button class="btn primary" style="width:100%;margin-top:6px" onclick="register()">Buat Akun</button>
+    </div>
+    <div class="notice">Ini hanya simulasi saldo digital. Jangan gunakan untuk uang sungguhan atau data finansial asli.</div>
+    <div id="setupWarn" class="notice hidden"></div>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+<header>
+  <div class="top"><div class="brand">FAZZXXY Wallet</div><div class="online">● ONLINE</div></div>
+  <div class="balance-card">
+    <div class="small">Saldo kamu</div>
+    <div class="row" style="justify-content:flex-start"><div id="balance" class="balance">Rp0</div><button class="eye" onclick="toggleBalance()">👁</button></div>
+    <div class="small" id="hello">Halo!</div>
+  </div>
+</header>
+
+<main class="content">
+<section id="homePage">
+  <div class="card stats">
+    <div class="stat"><div class="muted">Uang masuk</div><b id="income">Rp0</b></div>
+    <div class="stat"><div class="muted">Uang keluar</div><b id="expense">Rp0</b></div>
+  </div>
+
+  <div class="card">
+    <h3>Kirim saldo</h3>
+    <input id="targetPhone" inputmode="tel" placeholder="Nomor HP penerima">
+    <div id="receiverInfo" class="muted" style="min-height:18px"></div>
+    <input id="amount" type="number" min="1" placeholder="Nominal">
+    <div class="amounts">
+      <button onclick="setAmount(5000)">+5K</button><button onclick="setAmount(10000)">+10K</button><button onclick="setAmount(25000)">+25K</button><button onclick="setAmount(50000)">+50K</button>
+    </div>
+    <button class="btn primary" style="width:100%" onclick="transfer()">Kirim Sekarang</button>
+  </div>
+
+  <div class="card">
+    <div class="row"><h3>Riwayat transaksi</h3><button class="muted" style="background:none" onclick="loadData()">↻</button></div>
+    <div id="history"><div class="loader">Memuat...</div></div>
+  </div>
+</section>
+
+<section id="profilePage" class="hidden">
+  <div class="card">
+    <h3>Profil</h3>
+    <div class="profileLine"><span class="muted">Nama</span><br><b id="profileName">-</b></div>
+    <div class="profileLine"><span class="muted">Nomor HP</span><br><b id="profilePhone">-</b></div>
+    <div class="profileLine"><span class="muted">Status</span><br><b>● Terhubung online</b></div>
+  </div>
+  <div class="card">
+    <button class="btn danger" style="width:100%" onclick="logout()">Keluar</button>
+  </div>
+</section>
+</main>
+
+<nav>
+ <button id="homeNav" class="active" onclick="showPage('home')"><span class="navicon">🏠</span>Beranda</button>
+ <button onclick="showPage('profile')"><span class="navicon">👤</span>Profil</button>
+ <button onclick="loadData()"><span class="navicon">🔄</span>Sync</button>
+</nav>
+</div>
+
+<script>
+/* =========================================================
+   1. ISI DUA NILAI INI DARI PROJECT SUPABASE KAMU
+   Jangan masukkan service_role/secret key di sini.
+   ========================================================= */
+const SUPABASE_URL = "https://gztkygumqavnhyieqcin.supabase.co";
+const SUPABASE_KEY = "sb_publishable_rlzAewkbXcE5VNS79djyxQ_wY9m_mMS";
+
+let sb = null, me = null, profile = null, wallet = null, hiddenBalance = false;
+
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove('show'),2600);
+}
+function normPhone(v){ return (v||'').replace(/[^\d+]/g,'').replace(/^0/,'62'); }
+function money(n){return 'Rp'+Number(n||0).toLocaleString('id-ID')}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function checkConfig(){
+  if(SUPABASE_URL.includes('PASTE_') || SUPABASE_KEY.includes('PASTE_')){
+    document.getElementById('setupWarn').classList.remove('hidden');
+    document.getElementById('setupWarn').innerHTML='Database belum terhubung. Buka bagian <b>SUPABASE_URL</b> dan <b>SUPABASE_KEY</b> di kode, lalu isi dari project Supabase.';
+    return false;
+  }
+  sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+  return true;
+}
+function switchAuth(mode){
+  const login=mode==='login';
+  document.getElementById('loginBox').classList.toggle('hidden',!login);
+  document.getElementById('regBox').classList.toggle('hidden',login);
+  document.getElementById('loginTab').classList.toggle('sel',login);
+  document.getElementById('regTab').classList.toggle('sel',!login);
+}
+function syntheticEmail(phone){ return normPhone(phone).replace('+','')+'@fazzxxy-wallet.demo'; }
+
+async function register(){
+  if(!sb)return toast('Database belum disetting.');
+  const name=document.getElementById('regName').value.trim(), phone=normPhone(document.getElementById('regPhone').value), pass=document.getElementById('regPass').value;
+  if(!name||phone.length<8||pass.length<6)return toast('Isi nama, nomor HP, dan password minimal 6 karakter.');
+  const {data:exists,error:exErr}=await sb.from('profiles').select('id').eq('phone',phone).maybeSingle();
+  if(exErr)return toast(exErr.message);
+  if(exists)return toast('Nomor HP sudah terdaftar.');
+  const {data,error}=await sb.auth.signUp({email:syntheticEmail(phone),password:pass});
+  if(error)return toast(error.message);
+  if(!data.user)return toast('Akun belum dibuat.');
+  const {error:pErr}=await sb.from('profiles').insert({id:data.user.id,name,phone});
+  if(pErr){await sb.auth.signOut();return toast(pErr.message)}
+  const {error:wErr}=await sb.from('wallets').insert({user_id:data.user.id,balance:100000});
+  if(wErr){await sb.auth.signOut();return toast(wErr.message)}
+  toast('Akun berhasil dibuat. Saldo demo Rp100.000.');
+  await finishLogin(data.user.id);
+}
+async function login(){
+  if(!sb)return toast('Database belum disetting.');
+  const phone=normPhone(document.getElementById('loginPhone').value), pass=document.getElementById('loginPass').value;
+  if(phone.length<8||!pass)return toast('Isi nomor HP dan password.');
+  const {data,error}=await sb.auth.signInWithPassword({email:syntheticEmail(phone),password:pass});
+  if(error)return toast('Nomor HP atau password salah.');
+  await finishLogin(data.user.id);
+}
+async function finishLogin(uid){
+  const {data:p,error}=await sb.from('profiles').select('*').eq('id',uid).single();
+  if(error)return toast(error.message);
+  profile=p;me=uid;
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('hello').textContent='Halo, '+profile.name+' 👋';
+  document.getElementById('profileName').textContent=profile.name;
+  document.getElementById('profilePhone').textContent=profile.phone;
+  await loadData();
+}
+async function loadData(){
+  if(!sb||!me)return;
+  const {data:w,error:we}=await sb.from('wallets').select('*').eq('user_id',me).single();
+  if(we)return toast(we.message);
+  wallet=w; render();
+  const {data:tx,error:te}=await sb.from('transactions').select('*').eq('user_id',me).order('created_at',{ascending:false}).limit(30);
+  if(te){document.getElementById('history').innerHTML='<div class="muted">Gagal memuat riwayat.</div>';return}
+  let inc=0,exp=0;
+  tx.forEach(x=>x.type==='in'?(inc+=Number(x.amount)):(exp+=Number(x.amount)));
+  document.getElementById('income').textContent=money(inc);
+  document.getElementById('expense').textContent=money(exp);
+  document.getElementById('history').innerHTML=tx.length?tx.map(x=>{
+    const incoming=x.type==='in', label=incoming?('Dari '+esc(x.counterparty_phone)):('Ke '+esc(x.counterparty_phone));
+    return '<div class="tx"><div class="icon">'+(incoming?'⬇️':'⬆️')+'</div><div class="txmain"><b>'+label+'</b><span>'+new Date(x.created_at).toLocaleString('id-ID')+'</span></div><div class="'+(incoming?'plus':'minus')+'">'+(incoming?'+':'-')+money(x.amount)+'</div></div>'
+  }).join(''):'<div class="muted" style="padding:12px 0">Belum ada transaksi.</div>';
+}
+function render(){document.getElementById('balance').textContent=hiddenBalance?'••••••':money(wallet?.balance||0)}
+function toggleBalance(){hiddenBalance=!hiddenBalance;render()}
+function setAmount(n){document.getElementById('amount').value=n}
+async function previewReceiver(){
+  if(!sb||!me)return;
+  const phone=normPhone(document.getElementById('targetPhone').value), box=document.getElementById('receiverInfo');
+  if(phone.length<8){box.textContent='';return}
+  const {data,error}=await sb.from('profiles').select('name,phone').eq('phone',phone).maybeSingle();
+  if(error){box.textContent='';return}
+  box.textContent=data?'Penerima: '+data.name:'Nomor belum terdaftar';
+  box.dataset.ok=data?'1':'0';
+}
+let pt; document.getElementById('targetPhone').addEventListener('input',()=>{clearTimeout(pt);pt=setTimeout(previewReceiver,350)});
+
+async function transfer(){
+  if(!sb||!me)return;
+  const phone=normPhone(document.getElementById('targetPhone').value), amount=Number(document.getElementById('amount').value);
+  if(phone.length<8||!Number.isFinite(amount)||amount<=0)return toast('Nomor dan nominal belum benar.');
+  if(phone===profile.phone)return toast('Tidak bisa kirim ke akun sendiri.');
+  if(amount>Number(wallet.balance))return toast('Saldo demo tidak cukup.');
+  if(!confirm('Kirim '+money(amount)+' ke '+phone+'?'))return;
+  const {data,error}=await sb.rpc('transfer_demo_balance',{p_receiver_phone:phone,p_amount:amount});
+  if(error)return toast(error.message);
+  toast('Transfer berhasil! Saldo penerima akan langsung bertambah.');
+  document.getElementById('amount').value='';
+  document.getElementById('targetPhone').value='';
+  document.getElementById('receiverInfo').textContent='';
+  await loadData();
+}
+async function logout(){await sb.auth.signOut();location.reload()}
+function showPage(p){
+  document.getElementById('homePage').classList.toggle('hidden',p!=='home');
+  document.getElementById('profilePage').classList.toggle('hidden',p!=='profile');
+  document.getElementById('homeNav').classList.toggle('active',p==='home');
+}
+(async function(){
+  if(!checkConfig())return;
+  const {data}=await sb.auth.getSession();
+  if(data.session)await finishLogin(data.session.user.id);
+})();
+</script>
+</body>
+</html>
