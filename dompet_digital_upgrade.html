@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dompet Digital+</title>
+<style>
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+:root{--primary:#0866ff;--primary2:#00a8ff;--bg:#f3f6fb;--card:#fff;--text:#182230;--muted:#748094;--line:#e7ebf2;--green:#10b981;--red:#ef4444;--shadow:0 12px 32px rgba(20,35,60,.08)}
+body{margin:0;background:var(--bg);color:var(--text)}
+body.dark{--bg:#0b1220;--card:#111a2b;--text:#f4f7fb;--muted:#9aa7ba;--line:#263349;--shadow:0 12px 32px rgba(0,0,0,.25)}
+.app{max-width:430px;margin:auto;min-height:100vh;background:var(--bg);position:relative;overflow:hidden}
+button,input{font:inherit}.page{display:none}.page.active{display:block}
+.header{color:#fff;padding:20px 18px 78px;background:linear-gradient(135deg,#0454d8,#087cff 58%,#00a7ff);border-radius:0 0 28px 28px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.logo{font-size:20px;font-weight:900}.user{display:flex;align-items:center;gap:8px;font-size:13px}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2);font-size:18px}
+.balance-label{opacity:.85;font-size:13px}.balance{font-size:32px;font-weight:900;margin-top:3px;letter-spacing:.2px}
+.balance-row{display:flex;align-items:center;gap:10px}.eye{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:10px;padding:6px 9px}
+.content{margin:-48px 14px 90px;position:relative}
+.card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.02);margin-bottom:14px}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.action{border:0;background:transparent;color:var(--text);padding:5px 2px;cursor:pointer}
+.action-icon{width:44px;height:44px;margin:auto auto 6px;border-radius:15px;background:#eaf2ff;color:var(--primary);display:grid;place-items:center;font-size:20px;font-weight:800}
+.action span{font-size:11px;font-weight:700}
+.section-title{font-size:17px;font-weight:900;margin:3px 0 13px}
+.form-group{margin-bottom:12px}.form-group label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:var(--muted)}
+input{width:100%;padding:13px 12px;border:1px solid var(--line);border-radius:13px;background:var(--bg);color:var(--text);outline:none}
+input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(8,102,255,.12)}
+.btn{width:100%;padding:13px;border:0;border-radius:13px;font-weight:800;cursor:pointer}.primary{background:var(--primary);color:#fff}.success{background:var(--green);color:#fff}.secondary{background:var(--line);color:var(--text)}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}.quick button{border:1px solid var(--line);background:var(--card);color:var(--text);padding:8px 3px;border-radius:10px;font-size:11px;font-weight:800}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{padding:13px;border-radius:15px;background:var(--bg)}.stat small{color:var(--muted);display:block;font-size:11px}.stat b{font-size:16px}
+.tx{padding:12px 0;border-bottom:1px solid var(--line)}.tx:last-child{border-bottom:0}.tx-head{display:flex;justify-content:space-between;gap:10px}.badge{font-size:10px;padding:4px 7px;border-radius:99px;color:#fff;font-weight:900}.in{background:var(--green)}.out{background:var(--red)}.tx-name{font-weight:800;font-size:13px}.tx-amount{font-weight:900;font-size:13px}.positive{color:var(--green)}.negative{color:var(--red)}.meta{font-size:10px;color:var(--muted);margin-top:4px}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:10}
+.nav{border:0;background:transparent;color:var(--muted);font-size:10px;font-weight:800}.nav.active{color:var(--primary)}.nav i{display:block;font-style:normal;font-size:19px;margin-bottom:2px}
+.overlay{position:fixed;inset:0;background:rgba(5,15,30,.68);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}.overlay.active{display:flex}
+.auth{width:min(390px,100%);background:var(--card);border-radius:22px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth h2{text-align:center;margin:2px 0 5px}.auth p{text-align:center;color:var(--muted);font-size:12px;margin:0 0 17px}
+.switch{text-align:center;font-size:12px;margin-top:12px}.link{color:var(--primary);font-weight:900;cursor:pointer}
+.toast{position:fixed;top:18px;left:50%;transform:translate(-50%,-20px);opacity:0;z-index:100;background:#111827;color:#fff;padding:11px 15px;border-radius:12px;font-size:12px;font-weight:800;transition:.25s;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;background:rgba(5,15,30,.55);display:none;align-items:flex-end;justify-content:center;z-index:40}.modal.active{display:flex}.sheet{width:min(430px,100%);background:var(--card);border-radius:24px 24px 0 0;padding:18px 16px 25px}.sheet h3{margin:0 0 15px}
+.profile-row{display:flex;gap:12px;align-items:center}.big-avatar{width:62px;height:62px;border-radius:20px;background:linear-gradient(135deg,#0866ff,#00a8ff);display:grid;place-items:center;color:#fff;font-size:30px}.profile-row b{display:block}.profile-row small{color:var(--muted)}
+.empty{text-align:center;color:var(--muted);font-size:12px;padding:18px 0}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="page active" id="dashboardPage">
+  <div class="header">
+    <div class="top">
+      <div class="logo">Dompet Digital+</div>
+      <div class="user"><span id="headerUserName">Halo, User</span><div class="avatar" id="headerAvatar">😎</div></div>
+    </div>
+    <div class="balance-label">Saldo Anda</div>
+    <div class="balance-row"><div class="balance" id="balanceDisplay">Rp 0</div><button class="eye" id="btnEye">👁</button></div>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <div class="actions">
+        <button class="action" id="btnTopupAction"><div class="action-icon">＋</div><span>Isi Saldo</span></button>
+        <button class="action" id="btnTransferAction"><div class="action-icon">➤</div><span>Kirim</span></button>
+        <button class="action" id="btnHistoryAction"><div class="action-icon">↻</div><span>Riwayat</span></button>
+        <button class="action" id="btnProfileAction"><div class="action-icon">👤</div><span>Profil</span></button>
+      </div>
+    </div>
+
+    <div class="card" id="statsCard">
+      <div class="section-title">Ringkasan</div>
+      <div class="stats"><div class="stat"><small>Uang masuk</small><b class="positive" id="totalIn">Rp 0</b></div><div class="stat"><small>Uang keluar</small><b class="negative" id="totalOut">Rp 0</b></div></div>
+    </div>
+
+    <div class="card" id="topupSection">
+      <div class="section-title">Isi Saldo</div>
+      <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="topupAmount" min="1000" placeholder="Contoh: 50.000"></div>
+      <div class="quick">
+        <button data-topup="10000">+10K</button><button data-topup="25000">+25K</button><button data-topup="50000">+50K</button><button data-topup="100000">+100K</button>
+      </div>
+      <button class="btn success" id="btnTopup" style="margin-top:10px">Konfirmasi Isi Saldo</button>
+    </div>
+
+    <div class="card hidden" id="transferSection">
+      <div class="section-title">Kirim Uang</div>
+      <div class="form-group"><label>Nomor HP Tujuan</label><input type="text" id="transferPhone" inputmode="numeric" placeholder="08123456789"></div>
+      <div id="receiverPreview" class="hidden" style="padding:10px;background:var(--bg);border-radius:12px;margin-bottom:10px;font-size:12px"></div>
+      <div class="form-group"><label>Jumlah (Rp)</label><input type="number" id="transferAmount" min="1000" placeholder="Contoh: 20.000"></div>
+      <div class="quick"><button data-transfer="10000">10K</button><button data-transfer="25000">25K</button><button data-transfer="50000">50K</button><button data-transfer="100000">100K</button></div>
+      <button class="btn primary" id="btnTransfer" style="margin-top:10px">Kirim Sekarang</button>
+    </div>
+
+    <div class="card" id="historySection">
+      <div class="section-title">Transaksi Terbaru</div>
+      <div id="historyList"></div>
+    </div>
+
+    <div class="card hidden" id="profileSection">
+      <div class="section-title">Profil</div>
+      <div class="profile-row"><div class="big-avatar" id="bigAvatar">😎</div><div><b id="profileName">User</b><small id="profilePhone">-</small></div></div>
+      <div style="height:12px"></div>
+      <div class="form-group"><label>Nama</label><input id="editName"></div>
+      <button class="btn primary" id="btnSaveProfile">Simpan Profil</button>
+      <button class="btn secondary" id="btnTheme" style="margin-top:8px">🌙 Ganti Tema</button>
+      <button class="btn secondary" id="btnLogout" style="margin-top:8px">Keluar</button>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <button class="nav active" data-page="home"><i>⌂</i>Beranda</button>
+    <button class="nav" data-page="send"><i>➤</i>Kirim</button>
+    <button class="nav" data-page="history"><i>↻</i>Riwayat</button>
+    <button class="nav" data-page="profile"><i>👤</i>Profil</button>
+  </div>
+</div>
+
+<div class="overlay active" id="authOverlay">
+  <div class="auth">
+    <h2 id="authTitle">Masuk</h2><p id="authNote">Gunakan nomor HP dan password untuk masuk.</p>
+    <div id="loginForm">
+      <div class="form-group"><label>Nomor HP</label><input id="loginPhone" inputmode="numeric" placeholder="08123456789"></div>
+      <div class="form-group"><label>Password</label><input id="loginPassword" type="password" placeholder="••••••"></div>
+      <button class="btn primary" id="btnLogin">Masuk</button>
+      <div class="switch">Belum punya akun? <span class="link" id="toRegister">Daftar</span></div>
+    </div>
+    <div id="registerForm" class="hidden">
+      <div class="form-group"><label>Nama</label><input id="regName" placeholder="Nama lengkap"></div>
+      <div class="form-group"><label>Nomor HP</label><input id="regPhone" inputmode="numeric" placeholder="08123456789"></div>
+      <div class="form-group"><label>Password</label><input id="regPassword" type="password" placeholder="Minimal 6 karakter"></div>
+      <button class="btn success" id="btnRegister">Daftar</button>
+      <div class="switch">Sudah punya akun? <span class="link" id="toLogin">Masuk</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="confirmModal">
+ <div class="sheet"><h3>Konfirmasi Transfer</h3><div id="confirmText" style="font-size:13px;line-height:1.6;margin-bottom:15px"></div><button class="btn primary" id="confirmTransfer">Konfirmasi & Kirim</button><button class="btn secondary" id="cancelConfirm" style="margin-top:8px">Batal</button></div>
+</div>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const USERS_KEY='dd_users_v1',SESSION_KEY='dd_session_v1',WALLET_KEY='dd_wallet_v1',THEME_KEY='dd_theme_v1';
+const $=id=>document.getElementById(id);
+function loadUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY))||[]}catch(e){return[]}}
+function saveUsers(x){localStorage.setItem(USERS_KEY,JSON.stringify(x))}
+function loadSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY))}catch(e){return null}}
+function saveSession(x){x?localStorage.setItem(SESSION_KEY,JSON.stringify(x)):localStorage.removeItem(SESSION_KEY)}
+function loadWallet(){try{return JSON.parse(localStorage.getItem(WALLET_KEY))||{}}catch(e){return{}}}
+function saveWallet(x){localStorage.setItem(WALLET_KEY,JSON.stringify(x))}
+function money(n){return 'Rp '+Number(n||0).toLocaleString('id-ID')}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.tt);window.tt=setTimeout(()=>t.classList.remove('show'),2200)}
+let currentUser=null,currentWallet=null,saldoHidden=false,pendingTransfer=null;
+
+function showLogin(){$('loginForm').classList.remove('hidden');$('registerForm').classList.add('hidden');$('authTitle').textContent='Masuk';$('authNote').textContent='Gunakan nomor HP dan password untuk masuk.'}
+function showRegister(){$('loginForm').classList.add('hidden');$('registerForm').classList.remove('hidden');$('authTitle').textContent='Daftar Akun';$('authNote').textContent='Buat akun baru untuk mulai menggunakan.'}
+$('toRegister').onclick=showRegister;$('toLogin').onclick=showLogin;
+
+$('btnRegister').onclick=()=>{
+ const name=$('regName').value.trim(),phone=$('regPhone').value.trim(),password=$('regPassword').value;
+ if(!name||!phone||!password)return toast('Semua field wajib diisi');
+ if(!/^\d{10,}$/.test(phone))return toast('Nomor HP minimal 10 digit');
+ if(password.length<6)return toast('Password minimal 6 karakter');
+ const users=loadUsers();if(users.some(u=>u.phone===phone))return toast('Nomor HP sudah terdaftar');
+ users.push({name,phone,password,avatar:'😎'});saveUsers(users);
+ const w=loadWallet();w[phone]={balance:0,transactions:[]};saveWallet(w);
+ $('regName').value=$('regPhone').value=$('regPassword').value='';
+ toast('Akun berhasil dibuat');showLogin();
+};
+$('btnLogin').onclick=()=>{
+ const phone=$('loginPhone').value.trim(),password=$('loginPassword').value;
+ const u=loadUsers().find(x=>x.phone===phone&&x.password===password);
+ if(!u)return toast('Nomor HP atau password salah');
+ saveSession({phone});$('authOverlay').classList.remove('active');init();
+};
+
+function checkSession(){
+ const s=loadSession();if(!s)return false;
+ const u=loadUsers().find(x=>x.phone===s.phone);if(!u){saveSession(null);return false}
+ const w=loadWallet();if(!w[u.phone]){w[u.phone]={balance:0,transactions:[]};saveWallet(w)}
+ currentUser=u;currentWallet=w[u.phone];return true;
+}
+function render(){
+ $('headerUserName').textContent='Halo, '+(currentUser.name||currentUser.phone);
+ $('headerAvatar').textContent=currentUser.avatar||'😎';$('bigAvatar').textContent=currentUser.avatar||'😎';
+ $('profileName').textContent=currentUser.name||'User';$('profilePhone').textContent=currentUser.phone;
+ $('editName').value=currentUser.name||'';
+ $('balanceDisplay').textContent=saldoHidden?'••••••':money(currentWallet.balance);
+ const tx=currentWallet.transactions||[];let totalIn=0,totalOut=0;
+ tx.forEach(x=>x.type==='in'?totalIn+=Number(x.amount):totalOut+=Number(x.amount));
+ $('totalIn').textContent=money(totalIn);$('totalOut').textContent=money(totalOut);
+ const list=$('historyList');list.innerHTML='';
+ if(!tx.length){list.innerHTML='<div class="empty">Belum ada transaksi.</div>';return}
+ tx.slice().reverse().slice(0,8).forEach(x=>{
+   const incoming=x.type==='in',name=incoming?('Dari '+(x.fromName||x.from||'Top Up')):('Ke '+(x.toName||x.to));
+   const d=new Date(x.date).toLocaleString('id-ID');
+   list.innerHTML+=`<div class="tx"><div class="tx-head"><div><span class="badge ${incoming?'in':'out'}">${incoming?'MASUK':'KELUAR'}</span> <span class="tx-name">${name}</span></div><span class="tx-amount ${incoming?'positive':'negative'}">${incoming?'+':'-'}${money(x.amount)}</span></div><div class="meta">${d}</div></div>`;
+ });
+}
+function saveCurrent(){const w=loadWallet();w[currentUser.phone]=currentWallet;saveWallet(w);render()}
+function hideSections(){['topupSection','transferSection','profileSection'].forEach(id=>$(id).classList.add('hidden'));$('historySection').classList.remove('hidden');}
+function openTransfer(){hideSections();$('transferSection').classList.remove('hidden');$('transferPhone').focus()}
+function nav(which){
+ hideSections();
+ document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));
+ const map={home:0,send:1,history:2,profile:3};document.querySelectorAll('.nav')[map[which]].classList.add('active');
+ if(which==='home'){$('topupSection').classList.remove('hidden')}
+ if(which==='send')openTransfer();
+ if(which==='history')$('historySection').classList.remove('hidden');
+ if(which==='profile')$('profileSection').classList.remove('hidden');
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+$('btnTopupAction').onclick=()=>nav('home');
+$('btnTransferAction').onclick=()=>nav('send');
+$('btnHistoryAction').onclick=()=>nav('history');
+$('btnProfileAction').onclick=()=>nav('profile');
+document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>nav(n.dataset.page));
+$('btnEye').onclick=()=>{saldoHidden=!saldoHidden;$('btnEye').textContent=saldoHidden?'🙈':'👁';render()};
+document.querySelectorAll('[data-topup]').forEach(b=>b.onclick=()=>{$('topupAmount').value=b.dataset.topup});
+document.querySelectorAll('[data-transfer]').forEach(b=>b.onclick=()=>{$('transferAmount').value=b.dataset.transfer});
+
+$('btnTopup').onclick=()=>{
+ const amount=Number($('topupAmount').value);
+ if(!amount||amount<1000)return toast('Minimal isi saldo Rp1.000');
+ currentWallet.balance+=amount;currentWallet.transactions.push({type:'in',amount,from:'Top Up',date:new Date().toISOString()});
+ $('topupAmount').value='';saveCurrent();toast('Saldo berhasil ditambahkan');
+};
+
+$('transferPhone').addEventListener('input',()=>{
+ const phone=$('transferPhone').value.trim(),u=loadUsers().find(x=>x.phone===phone);
+ const p=$('receiverPreview');if(u&&phone!==currentUser.phone){p.classList.remove('hidden');p.innerHTML='👤 <b>'+u.name+'</b><br><span style="color:var(--muted)">'+u.phone+'</span>'}else p.classList.add('hidden');
+});
+$('btnTransfer').onclick=()=>{
+ const phone=$('transferPhone').value.trim(),amount=Number($('transferAmount').value),u=loadUsers().find(x=>x.phone===phone);
+ if(!/^\d{10,}$/.test(phone))return toast('Nomor tujuan tidak valid');
+ if(phone===currentUser.phone)return toast('Tidak bisa kirim ke diri sendiri');
+ if(!u)return toast('Akun tujuan tidak ditemukan');
+ if(!amount||amount<1000)return toast('Minimal transfer Rp1.000');
+ if(amount>currentWallet.balance)return toast('Saldo tidak mencukupi');
+ pendingTransfer={phone,amount,u};
+ $('confirmText').innerHTML=`Kirim <b>${money(amount)}</b> kepada <b>${u.name}</b> (${u.phone})?`;
+ $('confirmModal').classList.add('active');
+};
+$('cancelConfirm').onclick=()=>{$('confirmModal').classList.remove('active');pendingTransfer=null};
+$('confirmTransfer').onclick=()=>{
+ if(!pendingTransfer)return;
+ const {phone,amount,u}=pendingTransfer,w=loadWallet();
+ currentWallet.balance-=amount;
+ currentWallet.transactions.push({type:'out',amount,to:phone,toName:u.name,date:new Date().toISOString()});
+ if(!w[phone])w[phone]={balance:0,transactions:[]};
+ w[phone].balance+=amount;
+ w[phone].transactions.push({type:'in',amount,from:currentUser.phone,fromName:currentUser.name,date:new Date().toISOString()});
+ w[currentUser.phone]=currentWallet;saveWallet(w);
+ $('transferPhone').value='';$('transferAmount').value='';$('receiverPreview').classList.add('hidden');
+ $('confirmModal').classList.remove('active');pendingTransfer=null;render();toast('Transfer berhasil dikirim');
+};
+$('btnSaveProfile').onclick=()=>{
+ const name=$('editName').value.trim();if(!name)return toast('Nama tidak boleh kosong');
+ const users=loadUsers(),i=users.findIndex(x=>x.phone===currentUser.phone);users[i].name=name;currentUser=users[i];saveUsers(users);render();toast('Profil diperbarui');
+};
+$('btnTheme').onclick=()=>{
+ document.body.classList.toggle('dark');localStorage.setItem(THEME_KEY,document.body.classList.contains('dark')?'dark':'light');
+};
+$('btnLogout').onclick=()=>{
+ if(!confirm('Keluar dari akun?'))return;saveSession(null);currentUser=null;currentWallet=null;$('authOverlay').classList.add('active');showLogin();
+};
+function init(){
+ if(localStorage.getItem(THEME_KEY)==='dark')document.body.classList.add('dark');
+ if(!checkSession()){$('authOverlay').classList.add('active');showLogin();return}
+ $('authOverlay').classList.remove('active');render();
+}
+init();
+</script>
+</body>
+</html>
