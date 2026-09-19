@@ -43,7 +43,7 @@ nav button{background:none;color:var(--muted);font-size:11px}.navicon{font-size:
 <div id="authOverlay" class="overlay">
   <div class="auth">
     <h1>💳 Dompet Digital</h1>
-    <div class="sub">Demo online — akun dan saldo tersimpan di database bersama.</div>
+    <div class="sub">Demo online — login memakai nomor HP + password.</div>
     <div class="tabs"><button id="loginTab" class="sel" onclick="switchAuth('login')">Masuk</button><button id="regTab" onclick="switchAuth('reg')">Buat Akun</button></div>
 
     <div id="loginBox">
@@ -58,7 +58,7 @@ nav button{background:none;color:var(--muted);font-size:11px}.navicon{font-size:
       <input id="regPass" type="password" placeholder="Password minimal 6 karakter">
       <button class="btn primary" style="width:100%;margin-top:6px" onclick="register()">Buat Akun</button>
     </div>
-    <div class="notice">Ini hanya simulasi saldo digital. Jangan gunakan untuk uang sungguhan atau data finansial asli.</div>
+    <div class="notice">Ini hanya simulasi saldo digital. Login memakai Phone + Password Supabase. Jangan gunakan untuk uang sungguhan atau data finansial asli.</div>
     <div id="setupWarn" class="notice hidden"></div>
   </div>
 </div>
@@ -131,7 +131,14 @@ function toast(msg){
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.classList.remove('show'),2600);
 }
-function normPhone(v){ return (v||'').replace(/[^\d+]/g,'').replace(/^0/,'62'); }
+function normPhone(v){
+  let x=(v||'').replace(/[^\d+]/g,'');
+  if(x.startsWith('00')) x='+'+x.slice(2);
+  else if(x.startsWith('0')) x='+62'+x.slice(1);
+  else if(x.startsWith('62')) x='+'+x;
+  else if(!x.startsWith('+')) x='+'+x;
+  return x;
+}
 function money(n){return 'Rp'+Number(n||0).toLocaleString('id-ID')}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function checkConfig(){
@@ -150,18 +157,30 @@ function switchAuth(mode){
   document.getElementById('loginTab').classList.toggle('sel',login);
   document.getElementById('regTab').classList.toggle('sel',!login);
 }
-function syntheticEmail(phone){ return normPhone(phone).replace('+','')+'@fazzxxy-wallet.demo'; }
-
 async function register(){
   if(!sb)return toast('Database belum disetting.');
   const name=document.getElementById('regName').value.trim(), phone=normPhone(document.getElementById('regPhone').value), pass=document.getElementById('regPass').value;
-  if(!name||phone.length<8||pass.length<6)return toast('Isi nama, nomor HP, dan password minimal 6 karakter.');
+  if(!name||phone.length<10||pass.length<6)return toast('Isi nama, nomor HP, dan password minimal 6 karakter.');
   const {data:exists,error:exErr}=await sb.from('profiles').select('id').eq('phone',phone).maybeSingle();
   if(exErr)return toast(exErr.message);
   if(exists)return toast('Nomor HP sudah terdaftar.');
-  const {data,error}=await sb.auth.signUp({email:syntheticEmail(phone),password:pass});
-  if(error)return toast(error.message);
+
+  // Supabase Phone + Password Auth.
+  // Tidak memakai email palsu dan tidak mengirim email.
+  const {data,error}=await sb.auth.signUp({
+    phone:phone,
+    password:pass
+  });
+  if(error){
+    if(/phone.*(not enabled|disabled)/i.test(error.message))
+      return toast('Aktifkan Phone provider di Supabase Authentication > Providers.');
+    return toast(error.message);
+  }
   if(!data.user)return toast('Akun belum dibuat.');
+  if(!data.session){
+    return toast('Akun dibuat, tetapi verifikasi nomor HP masih aktif. Matikan Phone Confirmations untuk mode demo atau pasang SMS provider.');
+  }
+
   const {error:pErr}=await sb.from('profiles').insert({id:data.user.id,name,phone});
   if(pErr){await sb.auth.signOut();return toast(pErr.message)}
   const {error:wErr}=await sb.from('wallets').insert({user_id:data.user.id,balance:100000});
@@ -172,8 +191,8 @@ async function register(){
 async function login(){
   if(!sb)return toast('Database belum disetting.');
   const phone=normPhone(document.getElementById('loginPhone').value), pass=document.getElementById('loginPass').value;
-  if(phone.length<8||!pass)return toast('Isi nomor HP dan password.');
-  const {data,error}=await sb.auth.signInWithPassword({email:syntheticEmail(phone),password:pass});
+  if(phone.length<10||!pass)return toast('Isi nomor HP dan password.');
+  const {data,error}=await sb.auth.signInWithPassword({phone:phone,password:pass});
   if(error)return toast('Nomor HP atau password salah.');
   await finishLogin(data.user.id);
 }
